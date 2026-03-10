@@ -14,6 +14,8 @@ mentioned. If we missed you, please let us know!
 CHANGES  4.5.0   ??/02/2026
 ---------------------------
     * fix __rl_get_module__ for Python 3.15
+    * moved extformat.py elsewhere
+    * added combineTransforms
 
 CHANGES  4.4.10  12/02/2026
 ---------------------------
