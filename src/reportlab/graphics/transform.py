@@ -7,6 +7,7 @@ __all__ = (
     'skewX',
     'skewY',
     'mmult',
+    'combineTransforms',
     'inverse',
     'zTransformPoint',
     'transformPoint',
@@ -63,6 +64,8 @@ def combineTransforms(*T):
     a combined transform.
 
     combineTransforms(T0,T1,T2) == mmult(T2,mmult(T1,T0))
+                                == T2*T1*T0
+    so that T0 is applied first, then T1 and finally T2.
     '''
     nT = len(T)
     return (
