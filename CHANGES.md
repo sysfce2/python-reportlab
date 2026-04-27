@@ -11,11 +11,15 @@ E.g. to retrieve the changes made between release 3.4 and release 3.5, type::
 The contributors lists are in no order and apologies to those accidentally not
 mentioned. If we missed you, please let us know!
 
-CHANGES  4.5.0   ??/02/2026
+CHANGES  4.5.0   27/02/2026
 ---------------------------
+    * shapes.py fix Group.asDrawing
     * fix __rl_get_module__ for Python 3.15
     * moved extformat.py elsewhere
     * added combineTransforms
+    * improve colors.cssParse suggested by moritz dot schreiber at tu-ilmenau dot de
+    * change None to mean no-draw in acroform.py: Cozmin Velciu cozmin dot velciu at gmail dot com
+    * extend allowTableBoundsErrors scope: James Beith james dot beith at kraken dot tec
 
 CHANGES  4.4.10  12/02/2026
 ---------------------------
@@ -742,6 +746,7 @@ RELEASE 3.5  07/07/2018
 	* Axel P. Kielhorn
 	* ben @ readingtype.org.uk
 	* Chris Jerdonek cjerdonek @ bitbucket
+    * Cozmin Velciu cozmin dot velciu at gmail dot com
 	* Dan Palmer danpalmer @ bitbucket
 	* Garry Williams gary_williams @ bit_bucket
 	* Greg Svitak
@@ -754,6 +759,8 @@ RELEASE 3.5  07/07/2018
 	* Martin J. Laubach bitbucket issue #140
 	* Moritz Pfeiffer moritzpfeiffer @ bitbucket
 	* Raji Sundar
+    * Schreiber Moritz TU Ilmenau
+    * James Beith james dot beith at kraken dot tec
 	* Silas Sewell silassewell @ bitbucket
 	* simonkagwe @ bitbucket
 	* Tom Alexander @ bitbucket
