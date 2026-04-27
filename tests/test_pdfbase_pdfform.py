@@ -1,16 +1,56 @@
 from reportlab.lib.testutils import setOutDir,makeSuiteForClasses, outputfile, printLocation, NearTestCase
 setOutDir(__name__)
 import unittest
+from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfform
 
 class PdfFormTestCase(NearTestCase):
+    def _annotationDict(self, canv, index=1):
+        return canv._doc.idToObject['Annot.NUMBER%d' % index].dict
+
     def testMultipleUsage(self):
         for i in range(2):
             c = canvas.Canvas(outputfile('test_pdfbase_pdfform_multiple_usage_%s.pdf'%i))
             c.drawString(100, 100, "Test")
             pdfform.buttonFieldAbsolute(c, 'button', 'Off', 200, 200)
             c.save()
+
+    def testTextfieldOmitsWidgetStyleEntriesWhenUnset(self):
+        # Regression test: omitted widget style args should not force
+        # widget-level appearance entries that block AcroForm inheritance.
+        canv = canvas.Canvas(BytesIO())
+        canv.acroForm.textfield(name='tf-none', x=10, y=10, width=100, height=20,
+                          textColor=None, fillColor=None, borderColor=None,
+                          borderWidth=None)
+
+        annot = self._annotationDict(canv)
+        self.assertNotIn('DA', annot)
+        self.assertNotIn('MK', annot)
+        self.assertNotIn('BS', annot)
+
+    def testCheckboxOmitsMkColorsWhenUnset(self):
+        # Regression test: checkboxes still need /MK for /CA, but unset
+        # colors must not emit /MK /BG or /MK /BC.
+        canv = canvas.Canvas(BytesIO())
+        canv.acroForm.checkbox(name='cb-none', x=10, y=10, fillColor=None, borderColor=None)
+
+        annot = self._annotationDict(canv)
+        self.assertIn('MK', annot)
+        mk = annot['MK'].dict
+        self.assertIn('CA', mk)
+        self.assertNotIn('BG', mk)
+        self.assertNotIn('BC', mk)
+
+    def testForceBorderWithoutFillColorDoesNotWriteBackground(self):
+        # Regression test: forceBorder with no fill color should not imply
+        # a widget background entry.
+        canv = canvas.Canvas(BytesIO())
+        canv.acroForm.textfield(name='tf-force-border', x=10, y=10, width=100, height=20, fillColor=None, borderColor=None, forceBorder=True)
+        canv.save()
+
+        annot = self._annotationDict(canv)
+        self.assertNotIn('MK', annot)
 
     def testAAbsoluteAndRelativeFields(self):
         #the old test1 in pdfform
@@ -56,14 +96,14 @@ class PdfFormTestCase(NearTestCase):
         af.checkbox(name='cb1C',tooltip='Field cb1C',checked=True,x=72,y=72+2*36,buttonStyle='cross',borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.checkbox(name='cb1D',tooltip='Field cb1D',checked=True,x=72,y=72+3*36,buttonStyle='star',borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.checkbox(name='cb1E',tooltip='Field cb1E',checked=True,x=72,y=72+4*36,buttonStyle='diamond',borderStyle='bevelled', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
-        af.checkbox(name='cb1F',tooltip='Field cb1F',checked=True,x=72,y=72+5*36,buttonStyle='check', borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb1H',tooltip='Field cb1H',checked=True,x=72,y=72+6*36,buttonStyle='check', borderStyle='underlined',borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb1G',tooltip='Field cb1G',checked=True,x=72,y=72+7*36,buttonStyle='check', borderStyle='dashed',borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb1I',tooltip='Field cb1I',checked=True,x=72,y=72+8*36,buttonStyle='check', borderStyle='inset',borderWidth=1, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
+        af.checkbox(name='cb1F',tooltip='Field cb1F',checked=True,x=72,y=72+5*36,buttonStyle='check', borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkbox(name='cb1H',tooltip='Field cb1H',checked=True,x=72,y=72+6*36,buttonStyle='check', borderStyle='underlined',borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkbox(name='cb1G',tooltip='Field cb1G',checked=True,x=72,y=72+7*36,buttonStyle='check', borderStyle='dashed',borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkbox(name='cb1I',tooltip='Field cb1I',checked=True,x=72,y=72+8*36,buttonStyle='check', borderStyle='inset',borderWidth=1, borderColor=red,forceBorder=True)
         af.checkbox(name='cb1J',tooltip='Field cb1J',checked=True,x=72,y=72+9*36,buttonStyle='check', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
-        af.checkbox(name='cb1K',tooltip='Field cb1K',checked=True,x=72,y=72+10*36,buttonStyle='check', borderWidth=1, borderColor=None, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb1L',tooltip='Field cb1L',checked=False,x=72,y=800,buttonStyle='check',borderWidth=None, borderColor=None, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb1M',tooltip='Field cb1M',checked=False,x=72,y=600,buttonStyle='check',borderWidth=2, borderColor=blue, fillColor=None, textColor=None,forceBorder=True)
+        af.checkbox(name='cb1K',tooltip='Field cb1K',checked=True,x=72,y=72+10*36,buttonStyle='check', borderWidth=1,forceBorder=True)
+        af.checkbox(name='cb1L',tooltip='Field cb1L',checked=False,x=72,y=800,buttonStyle='check',borderWidth=None, borderColor=af.useDefault, fillColor=af.useDefault, textColor=af.useDefault,forceBorder=True)
+        af.checkbox(name='cb1M',tooltip='Field cb1M',checked=False,x=72,y=600,buttonStyle='check',borderWidth=2, borderColor=blue,forceBorder=True)
         af.radio(name='rb1A',tooltip='Field rb1A', value='V1', selected=False,x=144,y=72+0*36,buttonStyle='circle', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.radio(name='rb1A',tooltip='Field rb1A', value='V2', selected=True,x=144,y=72+1*36,buttonStyle='circle', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.radio(name='rb1B',tooltip='Field rb1B', value='V1', selected=False,x=144+36,y=72+0*36,buttonStyle='check', borderStyle='solid',shape='square', borderWidth=2, borderColor=green, fillColor=red, textColor=blue,forceBorder=True)
@@ -82,14 +122,14 @@ class PdfFormTestCase(NearTestCase):
         af.checkbox(name='cb2C',tooltip='Field cb2C',checked=True,x=72,y=72+2*36,buttonStyle='cross',borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.checkbox(name='cb2D',tooltip='Field cb2D',checked=True,x=72,y=72+3*36,buttonStyle='star',borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.checkbox(name='cb2E',tooltip='Field cb2E',checked=True,x=72,y=72+4*36,buttonStyle='diamond',borderStyle='bevelled', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
-        af.checkbox(name='cb2F',tooltip='Field cb2F',checked=True,x=72,y=72+5*36,buttonStyle='check', borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb2H',tooltip='Field cb2H',checked=True,x=72,y=72+6*36,buttonStyle='check', borderStyle='underlined',borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb2G',tooltip='Field cb2G',checked=True,x=72,y=72+7*36,buttonStyle='check', borderStyle='dashed',borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb2I',tooltip='Field cb2I',checked=True,x=72,y=72+8*36,buttonStyle='check', borderStyle='inset',borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
+        af.checkbox(name='cb2F',tooltip='Field cb2F',checked=True,x=72,y=72+5*36,buttonStyle='check', borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkbox(name='cb2H',tooltip='Field cb2H',checked=True,x=72,y=72+6*36,buttonStyle='check', borderStyle='underlined',borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkbox(name='cb2G',tooltip='Field cb2G',checked=True,x=72,y=72+7*36,buttonStyle='check', borderStyle='dashed',borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkbox(name='cb2I',tooltip='Field cb2I',checked=True,x=72,y=72+8*36,buttonStyle='check', borderStyle='inset',borderWidth=2, borderColor=red,forceBorder=True)
         af.checkbox(name='cb2J',tooltip='Field cb2J',checked=True,x=72,y=72+9*36,buttonStyle='check', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
-        af.checkbox(name='cb2K',tooltip='Field cb2K',checked=True,x=72,y=72+10*36,buttonStyle='check', borderWidth=1, borderColor=None, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb2L',tooltip='Field cb2L',checked=False,x=72,y=800,buttonStyle='check',borderWidth=None, borderColor=None, fillColor=None, textColor=None,forceBorder=True)
-        af.checkbox(name='cb2M',tooltip='Field cb2M',checked=False,x=72,y=600,buttonStyle='check',borderWidth=2, borderColor=blue, fillColor=None, textColor=None,forceBorder=True)
+        af.checkbox(name='cb2K',tooltip='Field cb2K',checked=True,x=72,y=72+10*36,buttonStyle='check', borderWidth=1,forceBorder=True)
+        af.checkbox(name='cb2L',tooltip='Field cb2L',checked=False,x=72,y=800,buttonStyle='check', borderWidth=None, forceBorder=True)
+        af.checkbox(name='cb2M',tooltip='Field cb2M',checked=False,x=72,y=600,buttonStyle='check',borderWidth=2, borderColor=blue,forceBorder=True)
         af.radio(name='rb2A',tooltip='Field rb2A', value='V1', selected=False,x=144,y=72+0*36,buttonStyle='circle', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.radio(name='rb2A',tooltip='Field rb2A', value='V2', selected=True,x=144,y=72+1*36,buttonStyle='circle', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.radio(name='rb2B',tooltip='Field rb2B', value='V1', selected=False,x=144+36,y=72+0*36,buttonStyle='check', borderStyle='solid',shape='square', borderWidth=2, borderColor=green, fillColor=red, textColor=blue,forceBorder=True)
@@ -108,14 +148,14 @@ class PdfFormTestCase(NearTestCase):
         af.checkboxRelative(name='cb3C',tooltip='Field cb3C',checked=True,x=72,y=72+2*36,buttonStyle='cross',borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.checkboxRelative(name='cb3D',tooltip='Field cb3D',checked=True,x=72,y=72+3*36,buttonStyle='star',borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.checkboxRelative(name='cb3E',tooltip='Field cb3E',checked=True,x=72,y=72+4*36,buttonStyle='diamond',borderStyle='bevelled', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
-        af.checkboxRelative(name='cb3F',tooltip='Field cb3F',checked=True,x=72,y=72+5*36,buttonStyle='check', borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkboxRelative(name='cb3H',tooltip='Field cb3H',checked=True,x=72,y=72+6*36,buttonStyle='check', borderStyle='underlined',borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkboxRelative(name='cb3G',tooltip='Field cb3G',checked=True,x=72,y=72+7*36,buttonStyle='check', borderStyle='dashed',borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
-        af.checkboxRelative(name='cb3I',tooltip='Field cb3I',checked=True,x=72,y=72+8*36,buttonStyle='check', borderStyle='inset',borderWidth=2, borderColor=red, fillColor=None, textColor=None,forceBorder=True)
+        af.checkboxRelative(name='cb3F',tooltip='Field cb3F',checked=True,x=72,y=72+5*36,buttonStyle='check', borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkboxRelative(name='cb3H',tooltip='Field cb3H',checked=True,x=72,y=72+6*36,buttonStyle='check', borderStyle='underlined',borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkboxRelative(name='cb3G',tooltip='Field cb3G',checked=True,x=72,y=72+7*36,buttonStyle='check', borderStyle='dashed',borderWidth=2, borderColor=red,forceBorder=True)
+        af.checkboxRelative(name='cb3I',tooltip='Field cb3I',checked=True,x=72,y=72+8*36,buttonStyle='check', borderStyle='inset',borderWidth=2, borderColor=red,forceBorder=True)
         af.checkboxRelative(name='cb3J',tooltip='Field cb3J',checked=True,x=72,y=72+9*36,buttonStyle='check', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
-        af.checkboxRelative(name='cb3K',tooltip='Field cb3K',checked=True,x=72,y=72+10*36,buttonStyle='check', borderWidth=1, borderColor=None, fillColor=None, textColor=None,forceBorder=True)
-        af.checkboxRelative(name='cb3L',tooltip='Field cb3L',checked=False,x=72,y=800,buttonStyle='check',borderWidth=None, borderColor=None, fillColor=None, textColor=None,forceBorder=True)
-        af.checkboxRelative(name='cb3M',tooltip='Field cb3M',checked=False,x=72,y=600,buttonStyle='check',borderWidth=2, borderColor=blue, fillColor=None, textColor=None,forceBorder=True)
+        af.checkboxRelative(name='cb3K',tooltip='Field cb3K',checked=True,x=72,y=72+10*36,buttonStyle='check', borderWidth=1,forceBorder=True)
+        af.checkboxRelative(name='cb3L',tooltip='Field cb3L',checked=False,x=72,y=800,buttonStyle='check',borderWidth=None,forceBorder=True)
+        af.checkboxRelative(name='cb3M',tooltip='Field cb3M',checked=False,x=72,y=600,buttonStyle='check',borderWidth=2, borderColor=blue,forceBorder=True)
         af.radioRelative(name='rb3A',tooltip='Field rb3A', value='V1', selected=False,x=144,y=72+0*36,buttonStyle='circle', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.radioRelative(name='rb3A',tooltip='Field rb3A', value='V2', selected=True,x=144,y=72+1*36,buttonStyle='circle', borderStyle='solid',shape='circle', borderWidth=2, borderColor=red, fillColor=green, textColor=blue,forceBorder=True)
         af.radioRelative(name='rb3B',tooltip='Field rb3B', value='V1', selected=False,x=144+36,y=72+0*36,buttonStyle='check', borderStyle='solid',shape='square', borderWidth=2, borderColor=green, fillColor=red, textColor=blue,forceBorder=True)
