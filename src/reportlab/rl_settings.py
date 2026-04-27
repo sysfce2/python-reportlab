@@ -73,7 +73,9 @@ toColorCanUse
 defCWRF
 unShapedFontGlob'''.split())
 
-allowTableBoundsErrors =    1 # set to 0 to die on too large elements in tables in debug (recommend 1 for production use)
+allowTableBoundsErrors =    1                       # set to 0 to die on too large elements in tables in debug
+                                                    # bit 1 & bit 2 at cell level
+                                                    # (recommend 1 for production use)
 shapeChecking =             1
 defaultEncoding =           'WinAnsiEncoding'       # 'WinAnsi' or 'MacRoman'
 defaultGraphicsFontName=    'Times-Roman'           #initializer for STATE_DEFAULTS in shapes.py
