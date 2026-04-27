@@ -64,10 +64,39 @@ class ColorTestCase(unittest.TestCase):
         allRed = [colors.red, [1, 0, 0], (1, 0, 0),
                   b'red', b'RED', b'0xFF0000', b'0xff0000',b'rgb(255,0,0)',
                   u'red', u'RED', u'0xFF0000', u'0xff0000',u'rgb(255,0,0)',
+                  'rgb(1.,0,0)', 'rgb(1.,0,0/100%)', 'rgb(255,0,0/100%)',
+                  'rgb(100.% 0% 0%/100%)',
                   ]
 
         for thing in allRed:
-            assert colors.toColor(thing) == colors.red,"colors.toColor(%s)-->%s != colors.red(%s)" % (ascii(thing),ascii(colors.toColor(thing)),colors.red)
+            self.assertEqual(colors.toColor(thing),colors.red,"colors.toColor(%s)-->%s != colors.red(%s)" % (ascii(thing),ascii(colors.toColor(thing)),colors.red))
+        self.assertEqual(colors.toColor('rgba(1 0 0 0.5)'),colors.Color(1/255,0,0,.5))
+        self.assertEqual(colors.toColor('rgb(255 0 0/50%)'),colors.Color(1,0,0,0.5))
+
+
+        def compare(c, x, nd=5):
+            for a in ('red','green','blue','alpha'):
+                if round(getattr(c,a),nd)!=round(getattr(x,a),nd): return False
+            return True
+
+        #compare str here to avoid float diffs caused by 255 divisions
+        toColor = colors.toColor
+        Color = colors.Color
+        CMYKColor = colors.CMYKColor
+        for value, expected in (
+                    ("rgba(.10,.10,.10,.10)", "Color(.1,.1,.1,.1)"),
+                    ("rgba(10.%,10.%,10.%,10.%)", "Color(.101961,.101961,.101961,.1)"),
+                    ("rgba(10%,10%,10%,10%)", "Color(.101961,.101961,.101961,.1)"),
+                    ("rgb(10%,10%,10%/10%)", "Color(.101961,.101961,.101961,.1)"),
+                    ("rgb(10%,10%,10%/.1)", "Color(.101961,.101961,.101961,.1)"),
+                    ("rgba(255,255,255,1)", "Color(1,1,1,1)"),
+                    ("rgba(1,1,1,1.)", "Color(.003922,.003922,.003922,1)"),
+                    ("rgb(1,1,1/1.)", "Color(.003922,.003922,.003922,1)"),
+                    ("cmyk(1,1,1,1/.1)", "CMYKColor(1,1,1,1,alpha=0.1)"),
+                    ("cmyka(1,1,1,1,.1)", "CMYKColor(1,1,1,1,alpha=0.1)"),
+                    ):
+            self.assertTrue(compare(toColor(toColor(value)),eval(expected)),
+                                f'toColor({value!r}) --> {toColor(value)!r} != {expected!r}')
 
     def test2a(self):
         '''attempt to test toColor against simple attacks'''
