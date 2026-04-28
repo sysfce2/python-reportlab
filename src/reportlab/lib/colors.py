@@ -784,13 +784,13 @@ class cssParse:
     if arguments have a percentage sign appended then the values are first
     divided by 100.
 
-    The alpha values can be speicied using the <func>a form and adding
-    an extra argument or using the simple form and addinf /<alpha> before
+    The alpha values can be specified using the <func>a form and adding
+    an extra argument or using the simple form and adding /<alpha> before
     the closing parenthesis. The alpha values can have decimal points and
     percent signs as desired. It's not clear if we should force rgb alpha
     values into 8 bit form.
 
-    Arguments can be seprated by comma or space.
+    Arguments can be separated by comma or space.
     '''
     def pcVal(self,v,n='argument'):
         v = v.strip()

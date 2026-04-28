@@ -2167,7 +2167,7 @@ only rows may be strings with values in {_SPECIALROWS!r}''')
     def split(self, availWidth, availHeight):
         self._calc(availWidth, availHeight)
         if self.splitByRow or self.splitInRow:
-            if not rl_config.allowTableBoundsErrors and self._width>availWidth: return []
+            if not rl_config.allowTableBoundsErrors&1 and self._width>availWidth: return []
 
             # If self.splitByRow is true, first try with doInRowSplit as false.
             # Otherwise, first try with doInRowSplit as true
