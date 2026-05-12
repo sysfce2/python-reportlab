@@ -73,8 +73,10 @@ toColorCanUse
 defCWRF
 unShapedFontGlob'''.split())
 
-allowTableBoundsErrors =    1                       # set to 0 to die on too large elements in tables in debug
-                                                    # bit 1 & bit 2 at cell level
+allowTableBoundsErrors =    1                       # bit 0 --> ignore overall width excession
+                                                    # bit 1 --> ignore negative available width
+                                                    # bit 2 --> turn bit 0 to a warning
+                                                    # bit 3 --> turn bit 1 into a warning
                                                     # (recommend 1 for production use)
 shapeChecking =             1
 defaultEncoding =           'WinAnsiEncoding'       # 'WinAnsi' or 'MacRoman'

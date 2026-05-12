@@ -11,7 +11,23 @@ E.g. to retrieve the changes made between release 3.4 and release 3.5, type::
 The contributors lists are in no order and apologies to those accidentally not
 mentioned. If we missed you, please let us know!
 
-CHANGES  4.5.0   27/02/2026
+
+CHANGES  4.5.1   12/05/2026
+---------------------------
+    * fix tests/runAll.py to avoid issues with sys.args
+    * release 4.5.1
+
+CHANGES  4.5.1a2 08/05/2026
+---------------------------
+    * fix no such attribute in lib.utils.rl_warn
+
+CHANGES  4.5.1a1 05/05/2026
+---------------------------
+    * SVGCanvas new keyword argument fontSizer defaulting to 'px'
+    * add rl_warn to lib/utils.py and use in tables (via extra allowTableBoundsErrors bits).
+    * rl_config.register_reset can have callback and now handles methods
+
+CHANGES  4.5.0   27/04/2026
 ---------------------------
     * shapes.py fix Group.asDrawing
     * fix __rl_get_module__ for Python 3.15

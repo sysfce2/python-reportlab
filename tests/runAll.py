@@ -113,6 +113,8 @@ def main(pattern='test_*.py'):
                             for _ in a[10:].split(',') if _.strip()]
                                 for a in sys.argv if a.startswith('--exclude=')
                     ],[])
+        for a in ('--verbosity=','--exclude=','--failfast'):
+            sys.argv[:] = [_ for _ in sys.argv if not _.startswith(a)]
         testSuite = makeSuite(folder,nonImportable=NI,exclude=exclude,pattern=pattern+(not haveSRC and 'c' or ''))
         result = unittest.TextTestRunner(verbosity=verbosity,failfast=failfast).run(testSuite)
     else:
