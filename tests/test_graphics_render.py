@@ -137,6 +137,8 @@ class RenderTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.outDir = outDir = outputfile('render-out')
+        from reportlab.graphics.testshapes import _setup
+        _setup()
         if not os.path.isdir(outDir):
             os.makedirs(outDir)
         for x in glob.glob(os.path.join(outDir,'*')):
